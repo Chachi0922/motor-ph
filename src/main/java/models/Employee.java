@@ -1,5 +1,6 @@
 package models;
 
+import org.apache.poi.ss.usermodel.Row;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -98,6 +99,110 @@ public class Employee {
     }
 
     /**
+     * Adds an attendance record for the employee, including whether they were late.
+     *
+     * @param date        The date of the attendance.
+     * @param logIn       The time the employee logged in.
+     * @param logOut      The time the employee logged out.
+     * @param workedHours The number of hours worked.
+     * @param isLate      Whether the employee was late.
+     */
+    public void addAttendance(String date, String logIn, String logOut, double workedHours, boolean isLate) {
+        String record = String.format("Date: %s, LogIn: %s, LogOut: %s, Worked Hours: %.2f, Is Late: %b",
+                date, logIn, logOut, workedHours, isLate);
+        attendanceRecords.add(record);
+        totalWorkedHours += workedHours;
+    }
+
+    /**
+     * Adds an attendance record from a CSV row.
+     *
+     * @param data The CSV row data.
+     */
+    public void addAttendanceFromCSV(String[] data) {
+        String date = data[3];
+        String logIn = data[4];
+        String logOut = data[5];
+        double workedHours = Double.parseDouble(data[6]);
+        boolean isLate = Boolean.parseBoolean(data[7]);
+        addAttendance(date, logIn, logOut, workedHours, isLate);
+    }
+
+    /**
+     * Adds an attendance record from an Excel row.
+     *
+     * @param row The Excel row.
+     */
+    public void addAttendanceFromExcelRow(Row row) {
+        String date = row.getCell(3).getStringCellValue();
+        String logIn = row.getCell(4).getStringCellValue();
+        String logOut = row.getCell(5).getStringCellValue();
+        double workedHours = row.getCell(6).getNumericCellValue();
+        boolean isLate = row.getCell(7).getBooleanCellValue();
+        addAttendance(date, logIn, logOut, workedHours, isLate);
+    }
+
+    /**
+     * Creates an Employee object from a CSV row.
+     *
+     * @param data The CSV row data.
+     * @return The created Employee object.
+     */
+    public static Employee fromCSV(String[] data) {
+        return new Employee(
+                data[0], // employeeNumber
+                data[1], // lastName
+                data[2], // firstName
+                data[3], // birthday
+                data[4], // address
+                data[5], // phoneNumber
+                data[6], // sssNumber
+                data[7], // philhealthNumber
+                data[8], // tinNumber
+                data[9], // pagibigNumber
+                data[10], // status
+                data[11], // position
+                data[12], // immediateSupervisor
+                Double.parseDouble(data[13]), // basicSalary
+                Double.parseDouble(data[14]), // riceSubsidy
+                Double.parseDouble(data[15]), // phoneAllowance
+                Double.parseDouble(data[16]), // clothingAllowance
+                Double.parseDouble(data[17]), // grossSemiMonthlyRate
+                Double.parseDouble(data[18])  // hourlyRate
+        );
+    }
+
+    /**
+     * Creates an Employee object from an Excel row.
+     *
+     * @param row The Excel row.
+     * @return The created Employee object.
+     */
+    public static Employee fromExcelRow(Row row) {
+        return new Employee(
+                row.getCell(0).getStringCellValue(), // employeeNumber
+                row.getCell(1).getStringCellValue(), // lastName
+                row.getCell(2).getStringCellValue(), // firstName
+                row.getCell(3).getStringCellValue(), // birthday
+                row.getCell(4).getStringCellValue(), // address
+                row.getCell(5).getStringCellValue(), // phoneNumber
+                row.getCell(6).getStringCellValue(), // sssNumber
+                row.getCell(7).getStringCellValue(), // philhealthNumber
+                row.getCell(8).getStringCellValue(), // tinNumber
+                row.getCell(9).getStringCellValue(), // pagibigNumber
+                row.getCell(10).getStringCellValue(), // status
+                row.getCell(11).getStringCellValue(), // position
+                row.getCell(12).getStringCellValue(), // immediateSupervisor
+                row.getCell(13).getNumericCellValue(), // basicSalary
+                row.getCell(14).getNumericCellValue(), // riceSubsidy
+                row.getCell(15).getNumericCellValue(), // phoneAllowance
+                row.getCell(16).getNumericCellValue(), // clothingAllowance
+                row.getCell(17).getNumericCellValue(), // grossSemiMonthlyRate
+                row.getCell(18).getNumericCellValue()  // hourlyRate
+        );
+    }
+
+    /**
      * Returns the list of attendance records for the employee.
      *
      * @return A list of attendance records as strings.
@@ -114,31 +219,60 @@ public class Employee {
     public String getFullname() {
         return this.firstName + " " + this.lastName;
     }
-    
-     public String getBirthday() {
+
+    /**
+     * Returns the employee's birthday.
+     *
+     * @return The birthday.
+     */
+    public String getBirthday() {
         return this.birthday;
     }
-     
+
+    /**
+     * Returns the employee's address.
+     *
+     * @return The address.
+     */
     public String getAddress() {
         return this.address;
     }
-    
+
+    /**
+     * Returns the employee's phone number.
+     *
+     * @return The phone number.
+     */
     public String getPhoneNumber() {
         return this.phoneNumber;
     }
-    
+
+    /**
+     * Returns the employee's SSS number.
+     *
+     * @return The SSS number.
+     */
     public String getSssNumber() {
         return this.sssNumber;
     }
-    
-     public String  getPhilhealthNumber() {
+
+    /**
+     * Returns the employee's PhilHealth number.
+     *
+     * @return The PhilHealth number.
+     */
+    public String getPhilhealthNumber() {
         return this.philhealthNumber;
     }
-     
-     public String  getTinNumber() {
+
+    /**
+     * Returns the employee's TIN number.
+     *
+     * @return The TIN number.
+     */
+    public String getTinNumber() {
         return this.tinNumber;
     }
-
 
     /**
      * Returns the employee's unique identification number.
@@ -174,12 +308,6 @@ public class Employee {
      */
     public double getBasicSalary() {
         return basicSalary;
-    }
-    
-    public void addAttendance(String date, String logIn, String logOut, double workedHours, boolean isLate) {
-        String record = String.format("Date: %s, LogIn: %s, LogOut: %s, Worked Hours: %.2f, Is Late: %b",
-                date, logIn, logOut, workedHours, isLate);
-        attendanceRecords.add(record);
     }
 
     /**

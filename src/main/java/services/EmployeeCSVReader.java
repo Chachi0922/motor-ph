@@ -9,14 +9,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Scanner;
 import java.util.Optional;
-import models.WorkLogEntry;
+import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The EmployeeCSVReader class is responsible for reading employee data from a CSV file
@@ -25,7 +24,10 @@ import models.WorkLogEntry;
 public class EmployeeCSVReader {
     private String filePath;
     private NumberFormat numberFormat;
-    
+
+    // Logger instance using java.util.logging
+    private static final Logger logger = Logger.getLogger(EmployeeCSVReader.class.getName());
+
     /**
      * Constructs a new EmployeeCSVReader with the specified file path.
      *
@@ -35,7 +37,7 @@ public class EmployeeCSVReader {
         this.filePath = filePath;
         this.numberFormat = NumberFormat.getInstance(Locale.US);
     }
-    
+
     /**
      * Reads the employee data from the CSV file and returns a list of Employee objects.
      *
@@ -45,28 +47,39 @@ public class EmployeeCSVReader {
      */
     public List<Employee> readEmployees() throws IOException, CsvValidationException {
         List<Employee> employees = new ArrayList<>();
-        
+
+        // Log the start of the CSV reading process
+        logger.log(Level.INFO, "Reading employee data from CSV file: {0}", filePath);
+
         try (CSVReader reader = new CSVReaderBuilder(new FileReader(filePath))
                 .withSkipLines(1) // Skip header row
                 .build()) {
-            
+
             String[] line;
             while ((line = reader.readNext()) != null) {
                 try {
                     // Parse the CSV data and create an Employee object
                     Employee employee = createEmployeeFromCSV(line);
                     employees.add(employee);
+                    logger.log(Level.FINE, "Successfully parsed employee: {0}", employee.getFullname());
                 } catch (ParseException e) {
-                    System.err.println("Error parsing data for row: " + String.join(", ", line));
-                    System.err.println("Error message: " + e.getMessage());
+                    // Log the error with details
+                    logger.log(Level.SEVERE, "Error parsing data for row: {0}", String.join(", ", line));
+                    logger.log(Level.SEVERE, "Error message: {0}", e.getMessage());
                     // You can choose to continue or throw the exception here
                 }
             }
+        } catch (IOException e) {
+            // Log the error with details
+            logger.log(Level.SEVERE, "Error reading CSV file: {0}", e.getMessage());
+            throw e;
         }
-        
+
+        // Log the number of employees successfully read
+        logger.log(Level.INFO, "Successfully read {0} employees from CSV file.", employees.size());
         return employees;
     }
-    
+
     /**
      * Creates an Employee object from a CSV line.
      *
@@ -90,7 +103,7 @@ public class EmployeeCSVReader {
         String status = data[10];
         String position = data[11];
         String immediateSupervisor = data[12];
-        
+
         // Parse numeric values using NumberFormat to handle commas
         double basicSalary = parseDoubleWithCommas(data[13]);
         double riceSubsidy = parseDoubleWithCommas(data[14]);
@@ -98,16 +111,16 @@ public class EmployeeCSVReader {
         double clothingAllowance = parseDoubleWithCommas(data[16]);
         double grossSemiMonthlyRate = parseDoubleWithCommas(data[17]);
         double hourlyRate = parseDoubleWithCommas(data[18]);
-        
+
         return new Employee(
-            employeeNumber, lastName, firstName, birthday, address,
-            phoneNumber, sssNumber, philhealthNumber, tinNumber,
-            pagibigNumber, status, position, immediateSupervisor,
-            basicSalary, riceSubsidy, phoneAllowance, clothingAllowance,
-            grossSemiMonthlyRate, hourlyRate
+                employeeNumber, lastName, firstName, birthday, address,
+                phoneNumber, sssNumber, philhealthNumber, tinNumber,
+                pagibigNumber, status, position, immediateSupervisor,
+                basicSalary, riceSubsidy, phoneAllowance, clothingAllowance,
+                grossSemiMonthlyRate, hourlyRate
         );
     }
-    
+
     /**
      * Parses a string that may contain commas as a double.
      *
@@ -119,36 +132,39 @@ public class EmployeeCSVReader {
         if (value == null || value.trim().isEmpty()) {
             return 0.0;
         }
-        
+
         // Remove any non-numeric characters except for decimal points and commas
         String cleanedValue = value.trim().replaceAll("[^0-9.,]", "");
-        
+
         // Parse the value with NumberFormat which handles commas
         return numberFormat.parse(cleanedValue).doubleValue();
     }
-    
+
     /**
      * Displays the employee data in a formatted table.
      *
      * @param employees The list of employees to display.
      */
     public void displayEmployees(List<Employee> employees) {
+        // Log the start of the display process
+        logger.log(Level.INFO, "Displaying employee data for {0} employees.", employees.size());
+
         System.out.println("======================= EMPLOYEE DATA =======================");
-        System.out.printf("%-10s %-20s %-15s %-15s %-15s%n", 
-                          "EMP #", "NAME", "BIRTHDAY", "BASIC SALARY", "HOURLY RATE");
+        System.out.printf("%-10s %-20s %-15s %-15s %-15s%n",
+                "EMP #", "NAME", "BIRTHDAY", "BASIC SALARY", "HOURLY RATE");
         System.out.println("============================================================");
-        
+
         for (Employee employee : employees) {
             System.out.printf("%-10s %-20s %-15s ₱%-14.2f ₱%-14.2f%n",
-                              employee.getEmployeeNumber(),
-                              employee.getFullname(),
-                              employee.getBirthday(),
-                              employee.getBasicSalary(),
-                              employee.getHourlyRate());
+                    employee.getEmployeeNumber(),
+                    employee.getFullname(),
+                    employee.getBirthday(),
+                    employee.getBasicSalary(),
+                    employee.getHourlyRate());
         }
         System.out.println("============================================================");
     }
-    
+
     /**
      * Finds an employee by their employee number.
      *
@@ -157,11 +173,14 @@ public class EmployeeCSVReader {
      * @return Optional containing the employee if found, empty otherwise.
      */
     public Optional<Employee> findEmployeeById(List<Employee> employees, String employeeNumber) {
+        // Log the search operation
+        logger.log(Level.INFO, "Searching for employee with ID: {0}", employeeNumber);
+
         return employees.stream()
                 .filter(employee -> employee.getEmployeeNumber().equals(employeeNumber))
                 .findFirst();
     }
-    
+
     /**
      * Displays detailed information for a specific employee.
      *
@@ -169,10 +188,14 @@ public class EmployeeCSVReader {
      */
     public void displayEmployeeDetails(Employee employee) {
         if (employee == null) {
+            logger.log(Level.WARNING, "No employee data available.");
             System.out.println("No employee data available.");
             return;
         }
-        
+
+        // Log the display of employee details
+        logger.log(Level.INFO, "Displaying details for employee: {0}", employee.getFullname());
+
         System.out.println("\n================= EMPLOYEE DETAILED INFO =================");
         System.out.println("Employee Number: " + employee.getEmployeeNumber());
         System.out.println("Name: " + employee.getFullname());
@@ -182,21 +205,22 @@ public class EmployeeCSVReader {
         System.out.println("SSS Number: " + employee.getSssNumber());
         System.out.println("PhilHealth Number: " + employee.getPhilhealthNumber());
         System.out.println("TIN Number: " + employee.getTinNumber());
-        
+
         // Add additional information if available
         try {
             String position = (String) employee.getClass().getMethod("getPosition").invoke(employee);
             System.out.println("Position: " + position);
         } catch (Exception e) {
             // Position getter not available
+            logger.log(Level.FINE, "Position getter not available for employee: {0}", employee.getFullname());
         }
-        
+
         System.out.println("\nSalary Information:");
         System.out.printf("Basic Salary: ₱%.2f\n", employee.getBasicSalary());
         System.out.printf("Hourly Rate: ₱%.2f\n", employee.getHourlyRate());
         System.out.println("===========================================================");
     }
-    
+
     /**
      * Interactive method that allows users to search for employees by ID.
      *
@@ -205,26 +229,28 @@ public class EmployeeCSVReader {
     public void searchEmployeeById(List<Employee> employees) {
         Scanner scanner = new Scanner(System.in);
         boolean continueSearch = true;
-        
+
+        // Log the start of the interactive search
+        logger.log(Level.INFO, "Starting interactive employee search.");
+
         while (continueSearch) {
             System.out.print("\nEnter employee ID to search (or 'exit' to quit): ");
             String input = scanner.nextLine().trim();
-            
+
             if (input.equalsIgnoreCase("exit")) {
                 continueSearch = false;
+                logger.log(Level.INFO, "User exited interactive search.");
                 continue;
             }
-            
+
             Optional<Employee> foundEmployee = findEmployeeById(employees, input);
-            
+
             if (foundEmployee.isPresent()) {
                 displayEmployeeDetails(foundEmployee.get());
             } else {
+                logger.log(Level.WARNING, "No employee found with ID: {0}", input);
                 System.out.println("No employee found with ID: " + input);
             }
         }
     }
-    
-  
-
 }
