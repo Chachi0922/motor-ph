@@ -30,8 +30,8 @@ public class MotorPh {
      */
     public static void main(String[] args) {
         // File paths for employee and attendance data
-        String employeesFile = "C:\\Users\\reyjh\\OneDrive\\Desktop\\employees.csv";
-        String attendanceFile = "C:\\Users\\reyjh\\OneDrive\\Desktop\\attendance.csv";
+        String employeesFile = "src\\main\\java\\assets\\files\\employees.csv";
+        String attendanceFile = "src\\main\\java\\assets\\files\\attendance.csv";
 
         // Scanner for user input
         Scanner scanner = new Scanner(System.in);
